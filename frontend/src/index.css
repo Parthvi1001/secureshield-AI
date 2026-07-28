@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-black text-white antialiased m-0 p-0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+  }
+}
+
+/* Cyber Grid Background Animation */
+.cyber-grid-bg {
+  position: relative;
+  background-color: #09090b;
+}
+
+.cyber-grid-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+  animation: grid-scroll 120s linear infinite;
+  z-index: 0;
+}
+
+@keyframes grid-scroll {
+  from { background-position: 0 0; }
+  to { background-position: 0 1000px; }
+}
+
+/* Glassmorphic Panels */
+.glass-panel {
+  @apply bg-cyber-gray bg-opacity-70 backdrop-blur-md border border-neon-blue/20 rounded-xl p-6 transition-all duration-300;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 243, 255, 0.05);
+}
+
+.glass-panel:hover {
+  @apply border-neon-blue/45;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 243, 255, 0.15);
+}
+
+.glass-panel-purple {
+  @apply bg-cyber-gray bg-opacity-70 backdrop-blur-md border border-neon-purple/20 rounded-xl p-6 transition-all duration-300;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px rgba(181, 53, 246, 0.05);
+}
+
+.glass-panel-purple:hover {
+  @apply border-neon-purple/45;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(181, 53, 246, 0.15);
+}
+
+.glass-panel-red {
+  @apply bg-cyber-gray bg-opacity-70 backdrop-blur-md border border-alert-red/20 rounded-xl p-6 transition-all duration-300;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 42, 42, 0.05);
+}
+
+.glass-panel-red:hover {
+  @apply border-alert-red/45;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 42, 42, 0.15);
+}
+
+/* Neon Text Glows */
+.neon-text {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 5px #00f3ff, 0 0 10px rgba(0, 243, 255, 0.5);
+}
+
+.neon-text-purple {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 5px #b535f6, 0 0 10px rgba(181, 53, 246, 0.5);
+}
+
+.neon-text-red {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 5px #ff2a2a, 0 0 10px rgba(255, 42, 42, 0.5);
+}
+
+/* Cyber inputs */
+.cyber-input {
+  @apply w-full bg-cyber-black bg-opacity-80 border border-neon-blue/40 text-neon-blue font-mono rounded-lg px-4 py-2.5 focus:outline-none focus:border-neon-blue focus:shadow-glow-blue transition-all duration-300 placeholder-neon-blue/40;
+}
+
+/* Cyber buttons */
+.cyber-btn {
+  @apply w-full bg-transparent border border-neon-blue text-neon-blue font-bold rounded-lg px-4 py-2.5 hover:bg-neon-blue/15 hover:text-white hover:shadow-glow-blue active:scale-95 transition-all duration-300 uppercase tracking-widest font-mono text-sm;
+}
+
+/* Heartbeat Pulsing indicator */
+.heartbeat-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.heartbeat-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1px solid #10b981;
+  border-radius: 50%;
+  animation: heartbeat-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes heartbeat-ring {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Loading Skeletons */
+.skeleton-loader {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 37%, #18181b 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.5s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

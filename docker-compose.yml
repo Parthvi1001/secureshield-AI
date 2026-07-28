@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: secureshield-backend:latest
+    container_name: secureshield-backend-container
+    restart: always
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - DJANGO_SECRET_KEY=production-secure-shield-key-2026-replace-me
+      - CORS_ALLOWED_ORIGINS=http://localhost,http://127.0.0.1
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+    image: secureshield-frontend:latest
+    container_name: secureshield-frontend-container
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+
+volumes:
+  static_volume:
+  media_volume:

@@ -1,0 +1,26 @@
+# Django
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Environments
+.env
+.env.local
+.venv/
+venv/
+env/
+ENV/
+
+# Node / Frontend
+node_modules/
+dist/
+.eslintcache
+frontend/node-v20.11.1-win-x64/
+frontend/node.zip
+
+# OS-specific
+.DS_Store
+Thumbs.db
