@@ -27,28 +27,6 @@ except ImportError:
 
 User = get_user_model()
 
-def get_email_template(title, code, description):
-    return f"""
-    <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0f172a; color: #f8fafc; padding: 40px; border-radius: 12px; border: 1px solid #1e293b;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #38bdf8; margin: 0; font-size: 28px; letter-spacing: -0.5px;">SecureShield AI</h1>
-        </div>
-        <div style="background-color: #1e293b; padding: 30px; border-radius: 8px; border: 1px solid #334155;">
-            <h2 style="margin-top: 0; color: #f1f5f9; font-size: 20px;">{title}</h2>
-            <p style="color: #94a3b8; font-size: 15px; line-height: 1.6;">{description}</p>
-            <div style="margin: 30px 0; text-align: center;">
-                <span style="display: inline-block; background-color: #0ea5e9; color: #ffffff; font-size: 32px; font-weight: bold; letter-spacing: 4px; padding: 15px 30px; border-radius: 8px; box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.39);">
-                    {code}
-                </span>
-            </div>
-            <p style="color: #64748b; font-size: 13px; margin-bottom: 0;">If you didn't request this code, you can safely ignore this email. Your account is secure.</p>
-        </div>
-        <div style="text-align: center; margin-top: 30px; color: #64748b; font-size: 12px;">
-            &copy; 2026 SecureShield AI. All rights reserved.
-        </div>
-    </div>
-    """
-
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
@@ -83,22 +61,10 @@ class SignupView(generics.CreateAPIView):
         user.device = user_agent.device.family
         
         user.save()
-
-        from django.core.mail import send_mail
         otp = OTP.objects.create(user=user, purpose='EMAIL_VERIFICATION')
-        html_content = get_email_template(
-            "Email Verification", 
-            otp.code, 
-            "Welcome to SecureShield AI! Please use the verification code below to verify your email address and activate your account."
-        )
-        send_mail(
-            'Verify your SecureShield AI account',
-            f'Your verification code is: {otp.code}',
-            None,
-            [user.email],
-            fail_silently=False,
-            html_message=html_content
-        )
+        from .emails import send_otp_email
+        send_otp_email(user.email, otp.code, 'EMAIL_VERIFICATION')
+
 
 class VerifyEmailView(APIView):
     permission_classes = (AllowAny,)
@@ -129,21 +95,9 @@ class ForgotPasswordView(APIView):
             email = serializer.validated_data['email']
             try:
                 user = User.objects.get(email=email)
-                from django.core.mail import send_mail
                 otp = OTP.objects.create(user=user, purpose='PASSWORD_RESET')
-                html_content = get_email_template(
-                    "Password Reset", 
-                    otp.code, 
-                    "We received a request to reset your password. Use the code below to set up a new password."
-                )
-                send_mail(
-                    'Reset your password',
-                    f'Your reset code is: {otp.code}',
-                    None,
-                    [user.email],
-                    fail_silently=False,
-                    html_message=html_content
-                )
+                from .emails import send_otp_email
+                send_otp_email(user.email, otp.code, 'PASSWORD_RESET')
                 return Response({"message": "Password reset OTP sent."}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 return Response({"message": "If the email exists, an OTP will be sent."}, status=status.HTTP_200_OK)
@@ -280,21 +234,9 @@ class CustomLoginView(APIView):
                 title=f"Suspicious Login Blocked ({risk_level})",
                 description=f"ML Engine detected anomalous login. Score: {threat_score:.4f}. Context: {device}, {country}, {browser}."
             )
-            from django.core.mail import send_mail
             otp = OTP.objects.create(user=user, purpose='LOGIN_2FA')
-            html_content = get_email_template(
-                "Suspicious Login Blocked", 
-                otp.code, 
-                f"Our ML Engine detected a suspicious login attempt (Risk Level: {risk_level}). We have blocked it and require 2FA verification. If this was you, please enter the code below."
-            )
-            send_mail(
-                f'Suspicious Login Detected ({risk_level})',
-                f'Risk Level: {risk_level}\nYour 2FA code is: {otp.code}',
-                None,
-                [user.email],
-                fail_silently=False,
-                html_message=html_content
-            )
+            from .emails import send_otp_email
+            send_otp_email(user.email, otp.code, 'LOGIN_2FA', risk_level=risk_level)
             
             return Response({
                 "requires_otp": True,
