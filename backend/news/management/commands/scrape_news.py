@@ -3,10 +3,28 @@ import requests
 from bs4 import BeautifulSoup
 from django.utils import timezone
 from news.models import CyberNews
-import datetime
+
+
+TOPIC_KEYWORDS = [
+    ("Cyber Attack", ["zero-day", "ddos", "intrusion", "exploit", "exploited", "hijack", "hijacked", "hijacking", "hackers", "hacking", "attackers", "unauthenticated attackers", "command execution", "code execution", "remote code execution", "run commands", "vm escape", "active exploitation"]),
+    ("Malware", ["malware", "ransomware", "trojan", "spyware", "worm", "botnet", "infostealer", "stealer", "rootkit", "virus", "backdoor"]),
+    ("Phishing", ["phishing", "smishing", "vishing", "credential", "spoof", "scam", "fake login", "phish"]),
+    ("Data Breach", ["data breach", "breach", "leak", "exposed", "compromised", "stolen", "leaked", "dataset", "database dump"]),
+]
+
+
+def infer_category(*parts):
+    """Map an article title or slug to the UI topic buckets."""
+    text = " ".join(part for part in parts if part).lower()
+
+    for category, keywords in TOPIC_KEYWORDS:
+        if any(keyword in text for keyword in keywords):
+            return category
+
+    return "General"
 
 class Command(BaseCommand):
-    help = 'Scrapes cybersecurity news from The Hacker News'
+    help = 'Scrapes cybersecurity news and assigns it to topic buckets'
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE("Starting news scrape from The Hacker News..."))
@@ -44,21 +62,20 @@ class Command(BaseCommand):
                     pub_date = timezone.now()
                 except Exception:
                     pub_date = timezone.now()
-                    
-                # category tag usually right next to date
-                category = "Cybersecurity" # Default
+
+                category = infer_category(title, article_url)
                 
-                if CyberNews.objects.filter(url=article_url).exists():
-                    continue # Skip duplicates
-                    
-                CyberNews.objects.create(
-                    title=title,
+                _, created = CyberNews.objects.update_or_create(
                     url=article_url,
-                    source="The Hacker News",
-                    published_date=pub_date,
-                    category=category
+                    defaults={
+                        "title": title,
+                        "source": "The Hacker News",
+                        "published_date": pub_date,
+                        "category": category,
+                    },
                 )
-                added_count += 1
+                if created:
+                    added_count += 1
                 
             self.stdout.write(self.style.SUCCESS(f"Successfully added {added_count} new articles."))
             
