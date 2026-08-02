@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import PrivateRoute from './components/PrivateRoute';
 import MainLayout from './layouts/MainLayout';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import OTPVerification from './pages/OTPVerification';
@@ -30,7 +31,7 @@ function App() {
         }} 
       />
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-otp" element={<OTPVerification />} />
