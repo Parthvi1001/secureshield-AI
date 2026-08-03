@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 const featureLinks = [
@@ -29,20 +29,20 @@ const CyberIllustration = () => (
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="640" height="520" rx="32" fill="#09111f" />
-    <circle cx="320" cy="260" r="190" fill="url(#ringGradient)" opacity="0.18" className="transition-all duration-1000 group-hover:scale-[1.05] origin-[320px_260px]" />
-    <circle cx="320" cy="260" r="145" stroke="#38bdf8" strokeOpacity="0.22" strokeWidth="2" fill="none" className="transition-all duration-1000 group-hover:scale-[1.02] origin-[320px_260px]" />
-    <circle cx="320" cy="260" r="98" stroke="#67e8f9" strokeOpacity="0.32" strokeWidth="2" fill="none" className="transition-all duration-700 group-hover:scale-[0.96] origin-[320px_260px]" />
-    <path d="M320 106 430 150v96c0 90-55 152-110 180-55-28-110-90-110-180v-96l110-44Z" fill="url(#shieldGradient)" stroke="#a5f3fc" strokeWidth="3" className="transition-all duration-500 group-hover:scale-[1.03] origin-[320px_260px]" />
-    <path d="M320 154v172" stroke="#dbeafe" strokeWidth="7" strokeLinecap="round" className="transition-all duration-500 group-hover:translate-y-[-2px]" />
-    <path d="M276 195 320 155l44 40" stroke="#dbeafe" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500 group-hover:translate-y-[-4px]" />
+    <circle cx="320" cy="260" r="190" fill="url(#ringGradient)" opacity="0.18" />
+    <circle cx="320" cy="260" r="145" stroke="#38bdf8" strokeOpacity="0.22" strokeWidth="2" fill="none" />
+    <circle cx="320" cy="260" r="98" stroke="#67e8f9" strokeOpacity="0.32" strokeWidth="2" fill="none" />
+    <path d="M320 106 430 150v96c0 90-55 152-110 180-55-28-110-90-110-180v-96l110-44Z" fill="url(#shieldGradient)" stroke="#a5f3fc" strokeWidth="3" />
+    <path d="M320 154v172" stroke="#dbeafe" strokeWidth="7" strokeLinecap="round" />
+    <path d="M276 195 320 155l44 40" stroke="#dbeafe" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M274 255h92" stroke="#dbeafe" strokeWidth="7" strokeLinecap="round" />
-    <circle cx="320" cy="260" r="18" fill="#0f172a" stroke="#67e8f9" strokeWidth="5" className="transition-all duration-500 group-hover:scale-110 origin-[320px_260px]" />
+    <circle cx="320" cy="260" r="18" fill="#0f172a" stroke="#67e8f9" strokeWidth="5" />
     <path d="M132 180h70m236 0h70M122 324h84m232 0h84" stroke="#22d3ee" strokeOpacity="0.5" strokeWidth="4" strokeLinecap="round" />
     <path d="M190 145 242 197m206-52-52 52m-206 153 52-52m206 52-52-52" stroke="#38bdf8" strokeOpacity="0.55" strokeWidth="4" strokeLinecap="round" />
-    <circle cx="148" cy="180" r="10" fill="#22d3ee" className="transition-all duration-300 group-hover:scale-110 origin-[148px_180px]" />
-    <circle cx="492" cy="180" r="10" fill="#22d3ee" className="transition-all duration-300 group-hover:scale-110 origin-[492px_180px]" />
-    <circle cx="148" cy="324" r="10" fill="#22d3ee" className="transition-all duration-300 group-hover:scale-110 origin-[148px_324px]" />
-    <circle cx="492" cy="324" r="10" fill="#22d3ee" className="transition-all duration-300 group-hover:scale-110 origin-[492px_324px]" />
+    <circle cx="148" cy="180" r="10" fill="#22d3ee" />
+    <circle cx="492" cy="180" r="10" fill="#22d3ee" />
+    <circle cx="148" cy="324" r="10" fill="#22d3ee" />
+    <circle cx="492" cy="324" r="10" fill="#22d3ee" />
     <g fill="none" stroke="#67e8f9" strokeWidth="2.5" strokeLinecap="round">
       <path d="M210 380c42-30 178-30 220 0" />
       <path d="M244 394c32-18 120-18 152 0" />
@@ -52,30 +52,29 @@ const CyberIllustration = () => (
     <circle cx="390" cy="382" r="5" fill="#67e8f9" />
     <circle cx="320" cy="396" r="5" fill="#67e8f9" />
   </svg>
-);;
+);
 
 const Home = () => {
   return (
     <div className="min-h-screen bg-[#07111f] text-slate-100">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header className="rounded-3xl border border-slate-800/80 bg-slate-950/70 px-4 py-4 shadow-[0_12px_40px_rgba(2,8,23,0.45)] backdrop-blur-md sm:px-6">
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-            <div className="flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-slate-900 shadow-[0_0_28px_rgba(34,211,238,0.35)] hover:shadow-[0_0_35px_rgba(34,211,238,0.65)] hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-slate-900 shadow-[0_0_32px_rgba(34,211,238,0.4)] hover:shadow-[0_0_40px_rgba(34,211,238,0.7)] hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer">
                 <IconShield />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-lg font-semibold tracking-wide text-white">SecureShield AI</p>
-                <p className="max-w-xs text-xs leading-5 text-slate-300 sm:text-sm">Intelligent Cybersecurity Threat Detection System</p>
+              <div className="space-y-1">
+                <p className="text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-150 to-cyan-300 font-mono uppercase drop-shadow-[0_0_6px_rgba(0,243,255,0.4)]">
+                  SecureShield AI
+                </p>
+                <p className="max-w-md text-xs sm:text-sm font-semibold text-cyan-400/90 font-mono tracking-wide drop-shadow-[0_0_4px_rgba(0,243,255,0.25)]">
+                  Intelligent Cybersecurity Threat Detection System
+                </p>
               </div>
             </div>
 
-            <div className="text-center hidden lg:block">
-              <p className="text-xl font-semibold tracking-wide text-white sm:text-2xl">SecureShield AI</p>
-              <p className="text-xs text-slate-400 sm:text-sm">Intelligent Cybersecurity Threat Detection System</p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
+            <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
               {featureLinks.map((link) => (
                 <Link
                   key={link.label}
@@ -97,7 +96,7 @@ const Home = () => {
           <section className="grid items-center gap-10 py-10 lg:grid-cols-2 lg:py-16">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
-                <span className="h-2 w-2 rounded-full bg-cyan-300 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
                 AI-powered threat monitoring for modern teams
               </div>
 
@@ -112,7 +111,7 @@ const Home = () => {
               <div className="flex flex-wrap gap-4 pt-2">
                 <Link
                   to="/signup"
-                  className="rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-7 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(34,211,238,0.22)] transition-all duration-300 hover:from-blue-400 hover:to-cyan-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_25px_#00f3ff,0_0_40px_rgba(0,243,255,0.35)]"
+                  className="rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-7 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(34,211,238,0.22)] transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_25px_#00f3ff,0_0_40px_rgba(0,243,255,0.35)]"
                 >
                   Get Started
                 </Link>

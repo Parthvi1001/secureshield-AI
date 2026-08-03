@@ -136,19 +136,6 @@
   100% { background-position: 0% 50%; }
 }
 
-/* Page Entrance Slide & Fade Transition */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.animate-page-entrance {
-  animation: fadeInUp 0.45s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
+
 
