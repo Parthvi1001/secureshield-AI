@@ -19,6 +19,11 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass-panel w-full max-w-md">
+        <div className="mb-6">
+          <Link to="/" className="text-neon-blue/60 hover:text-neon-blue transition-all duration-300 flex items-center justify-center space-x-2 text-xs font-mono uppercase tracking-wider">
+            <span>←</span> <span>Return to HQ</span>
+          </Link>
+        </div>
         <h2 className="text-3xl font-bold neon-text text-center mb-6 uppercase tracking-widest">Request Access</h2>
         <form onSubmit={handleSignup} className="space-y-4">
           <div>

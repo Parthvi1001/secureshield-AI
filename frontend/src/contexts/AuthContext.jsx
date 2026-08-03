@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('refresh_token');
       setUser(null);
       toast.success('Connection severed. Goodbye.');
-      navigate('/login');
+      navigate('/');
     }
   };
 
