@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const Admin = () => {
   const [purging, setPurging] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      try {
+        const res = await api.get('/admin/stats/');
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to load admin stats", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleManageOperatives = () => {
     // Dynamically resolve target Django admin endpoint depending on development or production server
@@ -37,6 +54,14 @@ const Admin = () => {
         response.data.message || 'Purge complete. All tables truncated.', 
         { id: 'purge-action', duration: 5000 }
       );
+      // Refresh stats
+      setStats({
+        total_files_cleaned: 0,
+        total_threats_removed: 0,
+        most_common_threat_type: 'None',
+        average_cleaning_time: 0,
+        cleaning_success_rate: 0
+      });
     } catch (err) {
       console.error(err);
       const errMsg = err.response?.data?.error || 'Authorization failed. Admin clearance level required.';
@@ -49,6 +74,57 @@ const Admin = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold neon-text uppercase tracking-widest">Global Admin Override</h2>
+      
+      {/* Analytics Cards Section */}
+      {loadingStats ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="glass-panel text-center p-4 h-24 animate-pulse bg-white/5 border-white/10"></div>
+          ))}
+        </div>
+      ) : stats ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Total Files Cleaned */}
+          <div className="glass-panel border-green-500/30 shadow-glow-green/5 text-center p-4">
+            <h3 className="text-xs uppercase text-green-400 tracking-wider font-semibold">Total Files Cleaned</h3>
+            <p className="text-3xl font-extrabold text-green-400 drop-shadow-[0_0_8px_#4ade80] mt-2">
+              {stats.total_files_cleaned}
+            </p>
+          </div>
+          
+          {/* Total Threats Removed */}
+          <div className="glass-panel border-green-500/30 text-center p-4">
+            <h3 className="text-xs uppercase text-green-400 tracking-wider font-semibold">Total Threats Removed</h3>
+            <p className="text-3xl font-extrabold text-green-400 mt-2">
+              {stats.total_threats_removed}
+            </p>
+          </div>
+
+          {/* Most Common Threat Type */}
+          <div className="glass-panel border-neon-purple/35 text-center p-4">
+            <h3 className="text-xs uppercase text-neon-purple tracking-wider font-semibold">Most Common Threat</h3>
+            <p className="text-sm font-bold text-white/95 mt-3.5 font-mono truncate" title={stats.most_common_threat_type}>
+              {stats.most_common_threat_type}
+            </p>
+          </div>
+
+          {/* Average Cleaning Time */}
+          <div className="glass-panel border-neon-blue/30 text-center p-4">
+            <h3 className="text-xs uppercase text-neon-blue tracking-wider font-semibold">Avg Cleaning Time</h3>
+            <p className="text-3xl font-extrabold text-neon-blue mt-2 font-mono">
+              {stats.average_cleaning_time}s
+            </p>
+          </div>
+
+          {/* Success Rate */}
+          <div className="glass-panel border-green-500/30 text-center p-4">
+            <h3 className="text-xs uppercase text-green-400 tracking-wider font-semibold">Success Rate</h3>
+            <p className="text-3xl font-extrabold text-green-400 mt-2">
+              {stats.cleaning_success_rate}%
+            </p>
+          </div>
+        </div>
+      ) : null}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Manage Operatives Card */}

@@ -54,3 +54,68 @@ class FileScannerAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['classification'], 'SUSPICIOUS')
         self.assertTrue(response.data['risk_score'] >= 40)
+
+    def test_clean_pdf_with_js(self):
+        # Create a mock PDF file with JS tokens (should be marked suspicious due to entropy or metadata)
+        # In our logic, let's trigger a mismatch or spoofing or EICAR, or just upload a zip/exe that is suspicious,
+        # then clean it. Since we can upload any pdf, let's create one with /JS and /OpenAction
+        dirty_pdf = SimpleUploadedFile(
+            "dangerous.pdf",
+            b"%PDF-1.4\n" + b"/JS /JavaScript /OpenAction /AA " * 10,
+            content_type="application/pdf"
+        )
+        
+        # Upload
+        upload_resp = self.client.post(self.upload_url, {'file': dirty_pdf}, format='multipart')
+        self.assertEqual(upload_resp.status_code, status.HTTP_201_CREATED)
+        scan_id = upload_resp.data['id']
+        
+        # Clean
+        clean_url = reverse('file_clean')
+        dirty_pdf.seek(0)
+        clean_resp = self.client.post(clean_url, {'file': dirty_pdf, 'scan_id': scan_id}, format='multipart')
+        
+        self.assertEqual(clean_resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(clean_resp.data['threats_removed'] > 0)
+        self.assertTrue(clean_resp.data['javascript_removed'])
+        self.assertEqual(clean_resp.data['status'], 'Cleaned')
+        self.assertIn('download_url', clean_resp.data)
+
+    def test_clean_invalid_scan_id(self):
+        clean_url = reverse('file_clean')
+        dummy_file = SimpleUploadedFile("test.pdf", b"%PDF-1.4\ncontent", content_type="application/pdf")
+        clean_resp = self.client.post(clean_url, {'file': dummy_file, 'scan_id': 9999}, format='multipart')
+        self.assertEqual(clean_resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_scan_cleaned_file_is_safe(self):
+        dirty_pdf = SimpleUploadedFile(
+            "dangerous.pdf",
+            b"%PDF-1.4\n" + b"/JS /JavaScript /OpenAction /AA " * 10,
+            content_type="application/pdf"
+        )
+        upload_resp = self.client.post(self.upload_url, {'file': dirty_pdf}, format='multipart')
+        self.assertEqual(upload_resp.status_code, status.HTTP_201_CREATED)
+        scan_id = upload_resp.data['id']
+        
+        clean_url = reverse('file_clean')
+        dirty_pdf.seek(0)
+        clean_resp = self.client.post(clean_url, {'file': dirty_pdf, 'scan_id': scan_id}, format='multipart')
+        self.assertEqual(clean_resp.status_code, status.HTTP_201_CREATED)
+        
+        from scanner.models import CleanedFile
+        cleaned_rec = CleanedFile.objects.get(id=clean_resp.data['id'])
+        cleaned_content = cleaned_rec.cleaned_file.read()
+        
+        cleaned_upload_file = SimpleUploadedFile(
+            "cleaned_file.pdf",
+            cleaned_content,
+            content_type="application/pdf"
+        )
+        
+        re_scan_resp = self.client.post(self.upload_url, {'file': cleaned_upload_file}, format='multipart')
+        
+        self.assertEqual(re_scan_resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(re_scan_resp.data['classification'], 'SAFE')
+        self.assertEqual(re_scan_resp.data['risk_score'], 0)
+
+

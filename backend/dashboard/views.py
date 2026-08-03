@@ -5,7 +5,7 @@ from rest_framework import status
 from django.db.models import Count
 from alerts.models import SecurityAlert
 from history.models import LoginHistory
-from scanner.models import FileScan
+from scanner.models import FileScan, CleanedFile
 
 class DashboardSummaryView(APIView):
     permission_classes = [IsAuthenticated]
@@ -58,6 +58,16 @@ class DashboardSummaryView(APIView):
             "created_at": scan.created_at
         } for scan in recent_scans]
 
+        recent_cleaned = CleanedFile.objects.filter(user=user).order_by('-created_at')[:5]
+        cleaned_data = [{
+            "id": c.id,
+            "filename": c.file_name,
+            "threats_removed": c.threats_removed,
+            "status": c.status,
+            "download_url": request.build_absolute_uri(c.cleaned_file.url) if c.cleaned_file else "",
+            "created_at": c.created_at
+        } for c in recent_cleaned]
+
         return Response({
             "security_score": security_score,
             "last_login": last_login,
@@ -65,5 +75,7 @@ class DashboardSummaryView(APIView):
             "blocked_threats": blocked_threats,
             "suspicious_logins": suspicious_logins,
             "recent_alerts": alerts_data,
-            "recent_scans": scans_data
+            "recent_scans": scans_data,
+            "recent_cleaned_files": cleaned_data
         }, status=status.HTTP_200_OK)
+

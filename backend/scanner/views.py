@@ -4,7 +4,9 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import FileScan
+from django.core.files.base import ContentFile
+from .models import FileScan, CleanedFile
+from .remediation import clean_file
 
 class FileUploadView(APIView):
     permission_classes = [IsAuthenticated]
@@ -32,13 +34,20 @@ class FileUploadView(APIView):
         sha256_hash.update(content)
         file_hash = sha256_hash.hexdigest()
 
+        # Check if this exact file matches a previously cleaned file
+        is_previously_cleaned = CleanedFile.objects.filter(cleaned_file_hash=file_hash).exists()
+        print(f"[SCAN TELEMETRY] File: {filename}, Size: {file_size} bytes, Hash: {file_hash}, Is Cleaned Whitelisted: {is_previously_cleaned}")
+
         # EICAR Test Hash
         EICAR_SHA256 = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
 
         risk_score = 0
         malware_family = None
 
-        if file_hash.lower() == EICAR_SHA256:
+        if is_previously_cleaned:
+            risk_score = 0
+            malware_family = None
+        elif file_hash.lower() == EICAR_SHA256:
             risk_score = 100
             malware_family = "EICAR-Test-File"
         else:
@@ -103,3 +112,73 @@ class FileUploadView(APIView):
             "classification": classification,
             "malware_family": malware_family
         }, status=status.HTTP_201_CREATED)
+
+
+class FileCleanView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        file_obj = request.FILES.get('file')
+        scan_id = request.data.get('scan_id')
+
+        if not file_obj:
+            return Response({"error": "No file uploaded for cleaning."}, status=status.HTTP_400_BAD_REQUEST)
+        if not scan_id:
+            return Response({"error": "No original scan ID provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            scan = FileScan.objects.get(id=scan_id, user=request.user)
+        except FileScan.DoesNotExist:
+            return Response({"error": "Original scan record not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Process the file in-memory
+        file_obj.seek(0)
+        content = file_obj.read()
+
+        cleaned_content, stats = clean_file(content, scan.file_name, scan.extension)
+        
+        # Calculate cleaned file hash
+        cleaned_hash = hashlib.sha256(cleaned_content).hexdigest()
+
+        # Generate a clean filename: e.g. "cleaned_name.pdf" or "name_cleaned.pdf"
+        filename_parts = scan.file_name.rsplit('.', 1)
+        if len(filename_parts) == 2:
+            clean_filename = f"{filename_parts[0]}_cleaned.{filename_parts[1]}"
+        else:
+            clean_filename = f"{scan.file_name}_cleaned"
+
+        # Create ContentFile for Django FileField
+        cleaned_file_obj = ContentFile(cleaned_content, name=clean_filename)
+
+        # Create CleanedFile record
+        cleaned_rec = CleanedFile.objects.create(
+            user=request.user,
+            original_scan=scan,
+            file_name=clean_filename,
+            threats_removed=stats['threats_removed'],
+            javascript_removed=stats['javascript_removed'],
+            hyperlinks_removed=stats['hyperlinks_removed'],
+            embedded_objects_removed=stats['embedded_objects_removed'],
+            metadata_removed=stats['metadata_removed'],
+            cleaning_time_seconds=stats['cleaning_time_seconds'],
+            status='Cleaned',
+            cleaned_file_hash=cleaned_hash
+        )
+        # Save file to media folder
+        cleaned_rec.cleaned_file.save(clean_filename, cleaned_file_obj, save=True)
+
+        return Response({
+            "id": cleaned_rec.id,
+            "file_name": cleaned_rec.file_name,
+            "threats_removed": cleaned_rec.threats_removed,
+            "javascript_removed": cleaned_rec.javascript_removed,
+            "hyperlinks_removed": cleaned_rec.hyperlinks_removed,
+            "embedded_objects_removed": cleaned_rec.embedded_objects_removed,
+            "metadata_removed": cleaned_rec.metadata_removed,
+            "cleaning_time_seconds": cleaned_rec.cleaning_time_seconds,
+            "status": cleaned_rec.status,
+            "download_url": request.build_absolute_uri(cleaned_rec.cleaned_file.url),
+            "created_at": cleaned_rec.created_at
+        }, status=status.HTTP_201_CREATED)
+

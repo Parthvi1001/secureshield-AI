@@ -37,7 +37,8 @@ const Dashboard = () => {
     blocked_threats: 0,
     suspicious_logins: 0,
     recent_alerts: [],
-    recent_scans: []
+    recent_scans: [],
+    recent_cleaned_files: []
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -245,6 +246,64 @@ const Dashboard = () => {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Recent Cleaned Files Section */}
+          <div className="glass-panel border-green-500/20 shadow-glow-green/5">
+            <h3 className="text-lg font-bold text-green-400 mb-4 uppercase tracking-wider border-b border-green-500/20 pb-2 flex items-center">
+              <span className="mr-2">🛡️</span> Recent Cleaned Files
+            </h3>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-neon-blue/80 font-mono text-xs uppercase">
+                    <th className="py-3 px-4">File Name</th>
+                    <th className="py-3 px-4">Upload Date</th>
+                    <th className="py-3 px-4 text-center">Threat Count</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recent_cleaned_files?.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-white/40 italic">
+                        No files cleaned yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    data.recent_cleaned_files?.map(file => (
+                      <tr key={file.id} className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200">
+                        <td className="py-3 px-4 font-mono text-white/90 truncate max-w-xs" title={file.filename}>
+                          {file.filename}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-white/70">
+                          {new Date(file.created_at).toLocaleDateString()} {new Date(file.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </td>
+                        <td className="py-3 px-4 text-center font-bold text-neon-purple">
+                          {file.threats_removed}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold bg-green-500/10 border border-green-500/30 text-green-400 rounded">
+                            {file.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <a
+                            href={file.download_url}
+                            download={file.filename}
+                            className="inline-block px-3 py-1 bg-transparent border border-green-400 text-green-400 hover:bg-green-400 hover:text-white rounded text-xs font-mono font-bold tracking-wider transition-all duration-300"
+                          >
+                            DOWNLOAD
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </>

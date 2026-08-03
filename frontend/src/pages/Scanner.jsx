@@ -6,12 +6,16 @@ const Scanner = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [cleaning, setCleaning] = useState(false);
+  const [cleaningStep, setCleaningStep] = useState('');
+  const [cleanedResult, setCleanedResult] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
       setResult(null); // clear previous results
+      setCleanedResult(null);
     }
   };
 
@@ -20,6 +24,7 @@ const Scanner = () => {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setFile(e.dataTransfer.files[0]);
       setResult(null);
+      setCleanedResult(null);
     }
   };
 
@@ -37,6 +42,7 @@ const Scanner = () => {
     formData.append('file', file);
 
     setLoading(true);
+    setCleanedResult(null);
     try {
       const res = await api.post('/scanner/upload/', formData, {
         headers: {
@@ -51,6 +57,64 @@ const Scanner = () => {
       setLoading(false);
     }
   };
+
+  const handleClean = async () => {
+    if (!file || !result) return;
+
+    setCleaning(true);
+    setCleanedResult(null);
+
+    const steps = [
+      "Cleaning File...",
+      "Removing Threats...",
+      "Securing Document...",
+      "Generating Safe PDF..."
+    ];
+
+    let stepIdx = 0;
+    setCleaningStep(steps[0]);
+
+    const stepInterval = setInterval(() => {
+      stepIdx++;
+      if (stepIdx < steps.length) {
+        setCleaningStep(steps[stepIdx]);
+      } else {
+        clearInterval(stepInterval);
+      }
+    }, 800);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('scan_id', result.id);
+
+      const res = await api.post('/scanner/clean/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // wait until the minimum time for steps has elapsed
+      const remainingTime = (steps.length * 800) - (stepIdx * 800);
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
+      clearInterval(stepInterval);
+      setCleaningStep("✅ File Successfully Cleaned");
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      setCleanedResult(res.data);
+      toast.success('File remediation complete.', { icon: '🛡️' });
+    } catch (err) {
+      clearInterval(stepInterval);
+      toast.error(err.response?.data?.error || 'Remediation failed.');
+    } finally {
+      setCleaning(false);
+      setCleaningStep('');
+    }
+  };
+
 
   const getStatusColor = (classification) => {
     switch(classification) {
@@ -102,7 +166,16 @@ const Scanner = () => {
         </div>
       </div>
 
-      {result && (
+      {cleaning && (
+        <div className="glass-panel max-w-4xl mx-auto mt-8 border-neon-purple/30 text-center py-12 flex flex-col items-center justify-center space-y-6">
+          <div className="w-16 h-16 border-t-4 border-b-4 border-neon-purple rounded-full animate-spin"></div>
+          <h3 className="text-2xl font-bold tracking-widest font-mono text-neon-purple animate-pulse">
+            {cleaningStep}
+          </h3>
+        </div>
+      )}
+
+      {result && !cleanedResult && !cleaning && (
         <div className="glass-panel max-w-4xl mx-auto mt-8 border-neon-blue/30 relative overflow-hidden">
           {/* Background Glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-neon-blue/5 rounded-full blur-3xl -z-10"></div>
@@ -150,6 +223,15 @@ const Scanner = () => {
                 </div>
                 <p className="text-2xl font-bold mt-2 font-mono">{result.risk_score} / 100</p>
               </div>
+
+              {result.classification !== 'SAFE' && (
+                <button
+                  onClick={handleClean}
+                  className="w-full bg-transparent border border-neon-purple text-neon-purple font-bold rounded-lg px-4 py-2.5 hover:bg-neon-purple/15 hover:text-white hover:shadow-glow-purple active:scale-95 transition-all duration-300 uppercase tracking-widest font-mono text-sm mt-2"
+                >
+                  🟢 Clean & Download
+                </button>
+              )}
             </div>
           </div>
           
@@ -161,6 +243,77 @@ const Scanner = () => {
           </div>
         </div>
       )}
+
+      {cleanedResult && !cleaning && (
+        <div className="glass-panel max-w-4xl mx-auto mt-8 border-green-500/30 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -z-10"></div>
+          
+          <h3 className="text-2xl font-bold text-green-400 mb-6 border-b border-green-500/20 pb-2">Remediation Report</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h4 className="text-md font-bold text-neon-blue uppercase tracking-wider mb-3">Threat Status</h4>
+              <div>
+                <p className="text-xs text-neon-blue/70">Original File</p>
+                <p className="font-mono text-sm truncate text-white/90" title={file?.name}>{file?.name}</p>
+              </div>
+              <div>
+                <p className="text-alert-red font-bold text-sm flex items-center">
+                  <span className="mr-1.5">⚠</span> Threat Detected
+                </p>
+                <p className="text-xs text-white/60 font-mono mt-0.5">Risk Level: {result?.classification}</p>
+              </div>
+              
+              <div className="pt-3 border-t border-white/10 space-y-1.5">
+                <p className="text-xs font-bold text-neon-purple">Threats Removed: {cleanedResult.threats_removed}</p>
+                {cleanedResult.javascript_removed && (
+                  <p className="text-xs text-green-400 flex items-center font-mono">
+                    <span className="mr-1.5">✔</span> Malicious JavaScript Removed
+                  </p>
+                )}
+                {cleanedResult.hyperlinks_removed && (
+                  <p className="text-xs text-green-400 flex items-center font-mono">
+                    <span className="mr-1.5">✔</span> Dangerous Hyperlink Removed
+                  </p>
+                )}
+                {cleanedResult.embedded_objects_removed && (
+                  <p className="text-xs text-green-400 flex items-center font-mono">
+                    <span className="mr-1.5">✔</span> Suspicious Embedded Object Removed
+                  </p>
+                )}
+                {cleanedResult.metadata_removed && (
+                  <p className="text-xs text-green-400 flex items-center font-mono">
+                    <span className="mr-1.5">✔</span> Malicious Metadata Removed
+                  </p>
+                )}
+                {!cleanedResult.javascript_removed && !cleanedResult.hyperlinks_removed && !cleanedResult.embedded_objects_removed && !cleanedResult.metadata_removed && (
+                  <p className="text-xs text-green-400 flex items-center font-mono">
+                    <span className="mr-1.5">✔</span> Malware Signatures Purged
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center space-y-6 border-l border-white/10 pl-8 text-center">
+              <div>
+                <p className="text-xs text-neon-blue/70 mb-1">File Status</p>
+                <h1 className="text-4xl font-black uppercase tracking-widest text-green-400 drop-shadow-[0_0_10px_#4ade80]">
+                  ✅ SECURE
+                </h1>
+              </div>
+              
+              <a 
+                href={cleanedResult.download_url} 
+                download={cleanedResult.file_name}
+                className="w-full text-center bg-transparent border border-green-400 text-green-400 font-bold rounded-lg px-4 py-2.5 hover:bg-green-400/15 hover:text-white hover:shadow-[0_0_10px_#4ade80] active:scale-95 transition-all duration-300 uppercase tracking-widest font-mono text-xs"
+              >
+                Download Clean PDF
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

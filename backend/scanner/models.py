@@ -45,3 +45,35 @@ class FileScan(models.Model):
 
     def __str__(self):
         return f"Scan: {self.file_name} ({self.status})"
+
+
+class CleanedFile(models.Model):
+    """
+    Records files that have undergone threat remediation (cleaning) and provides download URLs.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cleaned_files')
+    original_scan = models.ForeignKey(FileScan, on_delete=models.SET_NULL, null=True, blank=True, related_name='cleaned_versions')
+    file_name = models.CharField(max_length=255)
+    cleaned_file = models.FileField(upload_to='cleaned_files/')
+    threats_removed = models.IntegerField(default=0)
+    javascript_removed = models.BooleanField(default=False)
+    hyperlinks_removed = models.BooleanField(default=False)
+    embedded_objects_removed = models.BooleanField(default=False)
+    metadata_removed = models.BooleanField(default=False)
+    cleaning_time_seconds = models.FloatField(default=0.0)
+    status = models.CharField(max_length=20, default='Cleaned')
+    cleaned_file_hash = models.CharField(
+        max_length=64, 
+        validators=[MinLengthValidator(64), MaxLengthValidator(64)],
+        db_index=True,
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Cleaned: {self.file_name}"
+
