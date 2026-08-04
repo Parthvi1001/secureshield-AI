@@ -46,13 +46,22 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {/* Forgot Password Link */}
+            <div className="text-right mt-2">
+              <Link 
+                to="/forgot-password" 
+                className="text-xs text-neon-purple hover:text-neon-blue transition-colors font-mono uppercase tracking-wider"
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </div>
           <button type="submit" disabled={isLoading} className="cyber-btn mt-6">
-            {isLoading ? 'Authenticating...' : 'Authenticate'}
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <div className="mt-6 text-center text-sm">
-          <p>NO CLEARANCE? <Link to="/signup" className="text-neon-purple hover:text-neon-blue transition-colors">REQUEST ACCESS</Link></p>
+          <p>NO CLEARANCE? <Link to="/signup" className="text-neon-purple hover:text-neon-blue transition-colors">SIGN UP</Link></p>
         </div>
       </div>
     </div>

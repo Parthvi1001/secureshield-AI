@@ -17,6 +17,7 @@ import Alerts from './pages/Alerts';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import HealthCard from './pages/HealthCard';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-otp" element={<OTPVerification />} />
         <Route path="/verify-login-2fa" element={<VerifyLoginOTP />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route element={<PrivateRoute />}>
           <Route element={<MainLayout />}>

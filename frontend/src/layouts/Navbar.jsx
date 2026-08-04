@@ -20,7 +20,7 @@ const Navbar = ({ toggleSidebar }) => {
       </div>
 
       <div className="flex items-center space-x-6">
-        <div className="hidden sm:flex items-center space-x-2 text-xs uppercase tracking-wider font-mono text-white/70">
+        <div className="flex items-center space-x-2 text-xs uppercase tracking-wider font-mono text-white/70">
           <span>Operative:</span>
           <span className="text-neon-blue font-bold drop-shadow-[0_0_3px_rgba(0,243,255,0.4)]">{user?.email || 'Unknown'}</span>
           <span className="text-white/30">|</span>
@@ -29,13 +29,6 @@ const Navbar = ({ toggleSidebar }) => {
             <span className="text-green-400 font-bold drop-shadow-[0_0_3px_rgba(74,222,128,0.4)]">SYSTEM SECURE</span>
           </div>
         </div>
-        
-        <button 
-          onClick={logout}
-          className="px-4 py-1.5 border border-alert-red/70 text-alert-red font-mono rounded-lg hover:bg-alert-red/20 hover:shadow-glow-red transition-all duration-300 text-xs font-bold uppercase tracking-wider"
-        >
-          Disconnect Node
-        </button>
       </div>
     </header>
   );

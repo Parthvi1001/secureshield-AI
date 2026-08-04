@@ -1,8 +1,20 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
+  const { logout } = useAuth();
+
   const links = [
+    { 
+      name: 'Profile', 
+      path: '/profile',
+      icon: (
+        <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+      )
+    },
     { 
       name: 'Dashboard', 
       path: '/dashboard',
@@ -13,20 +25,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       )
     },
     { 
-      name: 'Health Card', 
-      path: '/health-card',
-      icon: (
-        <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      )
-    },
-    { 
       name: 'Scanner', 
       path: '/scanner',
       icon: (
         <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      )
+    },
+    { 
+      name: 'Cyber News', 
+      path: '/news',
+      icon: (
+        <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-95" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
         </svg>
       )
     },
@@ -45,24 +57,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       icon: (
         <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-        </svg>
-      )
-    },
-    { 
-      name: 'Cyber News', 
-      path: '/news',
-      icon: (
-        <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-95" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-        </svg>
-      )
-    },
-    { 
-      name: 'Profile', 
-      path: '/profile',
-      icon: (
-        <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
         </svg>
       )
     },
@@ -120,6 +114,22 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           ))}
         </ul>
       </nav>
+
+      {/* Logout Action Button Pinned to Bottom */}
+      <div className="p-4 border-t border-neon-blue/20 bg-cyber-dark/10">
+        <button
+          onClick={() => {
+            setIsOpen(false);
+            logout();
+          }}
+          className="group flex items-center w-full px-4 py-3 rounded-lg text-sm font-semibold tracking-wider uppercase transition-all duration-300 border border-transparent text-alert-red/70 hover:bg-alert-red/10 hover:text-white hover:border-alert-red/20 text-left"
+        >
+          <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
+      </div>
 
       {/* Footer System Active Status */}
       <div className="p-5 border-t border-neon-blue/20 text-center text-[10px] font-mono text-neon-blue/50 tracking-wider">
