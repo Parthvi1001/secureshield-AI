@@ -16,6 +16,7 @@ import History from './pages/History';
 import Alerts from './pages/Alerts';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import HealthCard from './pages/HealthCard';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/health-card" element={<HealthCard />} />
             <Route path="/scanner" element={<Scanner />} />
             <Route path="/news" element={<News />} />
             <Route path="/history" element={<History />} />
