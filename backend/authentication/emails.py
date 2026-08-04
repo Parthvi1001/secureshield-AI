@@ -52,6 +52,10 @@ def send_otp_email(user_email, otp_code, purpose, risk_level=None):
     Sends an OTP email. Uses a background thread to prevent blocking client requests,
     except during unit testing (where locmem email backend is used).
     """
+    print(f"\n==================================================")
+    print(f"[OTP VERIFICATION CODE] {otp_code} (User: {user_email}, Purpose: {purpose})")
+    print(f"==================================================\n")
+
     if purpose == 'EMAIL_VERIFICATION':
         subject = 'Verify your SecureShield AI account'
         title = "Email Verification"
