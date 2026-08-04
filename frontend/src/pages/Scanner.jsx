@@ -234,9 +234,16 @@ const Scanner = () => {
             📁 Scan Queue ({scanQueue.length} files)
           </h3>
 
-          <div className="divide-y divide-white/5">
+          <div className="space-y-3">
             {scanQueue.map((item) => (
-              <div key={item.id} className="py-4 space-y-3">
+              <div 
+                key={item.id} 
+                className={`p-4 rounded-xl transition-all duration-300 relative border border-transparent ${
+                  item.loading ? 'laser-scan-container bg-neon-blue/5 border-neon-blue/20' : 
+                  item.cleaning ? 'laser-scan-container-purple bg-neon-purple/5 border-neon-purple/20' : 
+                  'bg-white/5 hover:bg-white/10 hover:border-white/10'
+                }`}
+              >
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   {/* File Info */}
                   <div className="flex items-center space-x-3 min-w-[250px] max-w-full truncate">

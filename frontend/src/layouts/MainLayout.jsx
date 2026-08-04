@@ -3,12 +3,16 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import TechBackground from '../components/TechBackground';
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-cyber-black overflow-hidden text-neon-blue cyber-grid-bg">
+      {/* Cybersecurity Animated Particles Canvas */}
+      <TechBackground />
+
       {/* Sidebar Navigation */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
