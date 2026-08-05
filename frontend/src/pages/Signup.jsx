@@ -39,6 +39,16 @@ const Signup = () => {
     return () => clearInterval(interval);
   }, [isCountdownActive, countdown]);
 
+  // Username validation rules
+  const hasLetter = /[a-zA-Z]/.test(username);
+  const isOnlyDigits = username.length > 0 && /^\d+$/.test(username);
+  const isOnlyLetters = username.length > 0 && /^[a-zA-Z]+$/.test(username);
+
+  const isUsernameValid = username.length > 0 &&
+    !isOnlyDigits &&
+    hasLetter &&
+    (!isOnlyLetters || username.length > 3);
+
   // Password criteria verification
   const criteria = {
     length: password.length >= 8,
@@ -116,6 +126,10 @@ const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (!isUsernameValid) {
+      toast.error("Username does not meet the operative identity validation rules.");
+      return;
+    }
     if (!isEmailVerified) {
       toast.error("Email verification is mandatory before registration.");
       return;
@@ -149,6 +163,27 @@ const Signup = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
+            
+            {/* Dynamic Username Requirements Checklist */}
+            {username.length > 0 && (
+              <div className="mt-3 p-3 bg-cyber-dark/50 border border-neon-blue/10 rounded-lg space-y-1.5 font-mono text-xs">
+                <span className="text-[10px] text-neon-blue/60 uppercase block mb-1 tracking-wider">Username Requirements:</span>
+                <div className="flex items-center space-x-2">
+                  <span>{hasLetter ? '✅' : '❌'}</span>
+                  <span className={hasLetter ? 'text-green-400' : 'text-white/60'}>Contains at least one letter</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span>{!isOnlyDigits ? '✅' : '❌'}</span>
+                  <span className={!isOnlyDigits ? 'text-green-400' : 'text-white/60'}>Cannot consist only of numbers</span>
+                </div>
+                {isOnlyLetters && (
+                  <div className="flex items-center space-x-2">
+                    <span>{username.length > 3 ? '✅' : '❌'}</span>
+                    <span className={username.length > 3 ? 'text-green-400' : 'text-white/60'}>More than 3 characters if letter-only</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm mb-1">EMAIL</label>
@@ -260,7 +295,7 @@ const Signup = () => {
 
           <button 
             type="submit" 
-            disabled={isLoading || !isPasswordValid || !isEmailVerified} 
+            disabled={isLoading || !isPasswordValid || !isEmailVerified || !isUsernameValid} 
             className="cyber-btn mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
           >
             {isLoading ? 'Processing...' : 'Sign Up'}

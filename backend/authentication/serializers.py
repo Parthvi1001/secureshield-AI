@@ -20,6 +20,29 @@ class SignupSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+    def validate_username(self, value):
+        username = value.strip()
+        
+        # 1. Not allowed only digits
+        if username.isdigit():
+            raise serializers.ValidationError("Username cannot consist only of numbers.")
+            
+        # Must contain at least one letter
+        has_letter = any(c.isalpha() for c in username)
+        if not has_letter:
+            raise serializers.ValidationError("Username must contain at least one letter.")
+            
+        # 2. If only characters, must be more than 3
+        is_only_letters = username.isalpha()
+        if is_only_letters and len(username) <= 3:
+            raise serializers.ValidationError("Username must be more than 3 characters if it only contains letters.")
+            
+        # Check if username is already taken
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("A user with that username already exists.")
+            
+        return username
+
     def validate_email(self, value):
         """Ensure email is normalized and unique (case-insensitive)."""
         email = value.lower()

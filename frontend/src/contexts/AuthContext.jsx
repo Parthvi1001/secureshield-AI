@@ -15,9 +15,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const accessToken = localStorage.getItem('access_token');
+      const userEmail = localStorage.getItem('user_email');
       if (accessToken) {
         // Assume authenticated for now since JWT validation happens on API calls
-        setUser({ authenticated: true });
+        setUser({ email: userEmail, authenticated: true });
       }
       setLoading(false);
     };
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }) => {
       
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
+      localStorage.setItem('user_email', email);
       setUser({ email, authenticated: true });
       toast.success('Authentication successful. Welcome, Operative.');
       navigate('/dashboard');
@@ -51,6 +53,7 @@ export const AuthProvider = ({ children }) => {
       const res = await api.post('/auth/verify-login-otp/', { email, code });
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
+      localStorage.setItem('user_email', email);
       setUser({ email, authenticated: true });
       toast.success('Threat cleared. Secondary Authentication successful.');
       navigate('/dashboard');
@@ -97,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_email');
       setUser(null);
       toast.success('Connection severed. Goodbye.');
       navigate('/');

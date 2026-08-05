@@ -31,6 +31,7 @@ describe('Sidebar Layout Component', () => {
     // Verify key security app sections are visible as links
     expect(screen.getByText(/Profile/i)).toBeInTheDocument();
     expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/Health Card/i)).toBeInTheDocument();
     expect(screen.getByText(/Scanner/i)).toBeInTheDocument();
     expect(screen.getByText(/Cyber News/i)).toBeInTheDocument();
     expect(screen.getByText(/Alerts/i)).toBeInTheDocument();
