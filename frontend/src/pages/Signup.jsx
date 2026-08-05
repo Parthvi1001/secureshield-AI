@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const Signup = () => {
@@ -9,6 +10,34 @@ const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // OTP and Verification States
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  
+  // Custom feedback messages
+  const [otpMessage, setOtpMessage] = useState('');
+  const [otpStatus, setOtpStatus] = useState(''); // 'success' | 'error'
+
+  // Countdown timer for Resend OTP
+  const [countdown, setCountdown] = useState(60);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
+
+  useEffect(() => {
+    let interval = null;
+    if (isCountdownActive && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setIsCountdownActive(false);
+      setCountdown(60);
+    }
+    return () => clearInterval(interval);
+  }, [isCountdownActive, countdown]);
 
   // Password criteria verification
   const criteria = {
@@ -21,14 +50,82 @@ const Signup = () => {
 
   const isPasswordValid = Object.values(criteria).every(Boolean);
 
+  const handleSendOTP = async () => {
+    // Validate email format before sending
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setOtpStatus('error');
+      setOtpMessage("Invalid email format.");
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setOtpMessage('');
+    setOtpStatus('');
+    
+    try {
+      const res = await api.post('/auth/register-send-otp/', { email: email.toLowerCase() });
+      setIsOtpSent(true);
+      setOtpStatus('success');
+      setOtpMessage(res.data.message || "OTP has been sent successfully. Please check your Inbox or Spam folder.");
+      setIsCountdownActive(true);
+      toast.success("Verification code transmitted successfully.");
+    } catch (err) {
+      console.error(err);
+      setOtpStatus('error');
+      const errDetail = err.response?.data?.error || "Failed to send OTP.";
+      setOtpMessage(errDetail);
+      toast.error(errDetail);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpStatus('error');
+      setOtpMessage("Please enter a valid 6-digit OTP.");
+      toast.error("OTP must be 6 digits.");
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setOtpMessage('');
+    setOtpStatus('');
+
+    try {
+      const res = await api.post('/auth/register-verify-otp/', { 
+        email: email.toLowerCase(), 
+        code: otpCode.trim() 
+      });
+      setIsEmailVerified(true);
+      setOtpStatus('success');
+      setOtpMessage("Email Verified Successfully.");
+      toast.success("Email clearance verified successfully.");
+    } catch (err) {
+      console.error(err);
+      setOtpStatus('error');
+      const errDetail = err.response?.data?.error || "Invalid OTP. Please try again.";
+      setOtpMessage(errDetail);
+      toast.error(errDetail);
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
+    if (!isEmailVerified) {
+      toast.error("Email verification is mandatory before registration.");
+      return;
+    }
     if (!isPasswordValid) {
       toast.error("Please meet all password security requirements before proceeding.");
       return;
     }
     setIsLoading(true);
-    await signup(username, email, password);
+    const success = await signup(username, email, password, otpCode.trim());
     setIsLoading(false);
   };
 
@@ -55,15 +152,75 @@ const Signup = () => {
           </div>
           <div>
             <label className="block text-sm mb-1">EMAIL</label>
-            <input 
-              type="email" 
-              required 
-              className="cyber-input" 
-              placeholder="name@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <input 
+                type="email" 
+                required 
+                className="cyber-input flex-1" 
+                placeholder="name@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isEmailVerified || isSendingOtp}
+              />
+              <button
+                type="button"
+                onClick={handleSendOTP}
+                disabled={isSendingOtp || isEmailVerified || isCountdownActive}
+                className="px-4 py-2 bg-neon-blue/20 border border-neon-blue/40 text-neon-blue font-mono text-xs rounded hover:bg-neon-blue/30 disabled:opacity-40 transition-all font-bold whitespace-nowrap"
+              >
+                {isCountdownActive ? `Resend in ${countdown}s` : 'Send OTP'}
+              </button>
+            </div>
           </div>
+
+          {/* OTP Verification Section (visible only when OTP is sent) */}
+          {isOtpSent && !isEmailVerified && (
+            <div className="space-y-2 border border-neon-blue/10 bg-cyber-dark/40 p-3 rounded-lg animate-fade-in">
+              <label className="block text-xs font-mono mb-1 uppercase tracking-wider text-neon-blue">Verification OTP Code</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  maxLength="6"
+                  required 
+                  className="cyber-input flex-1 text-center text-lg font-bold tracking-[0.3em] font-mono" 
+                  placeholder="000000" 
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyOTP}
+                  disabled={isVerifyingOtp}
+                  className="px-4 py-2 bg-neon-purple/20 border border-neon-purple/40 text-neon-purple font-mono text-xs rounded hover:bg-neon-purple/30 disabled:opacity-40 transition-all font-bold"
+                >
+                  {isVerifyingOtp ? 'Checking...' : 'Verify OTP'}
+                </button>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-mono mt-1 text-white/40">
+                <span>Expires in 5 minutes</span>
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  disabled={isCountdownActive}
+                  className="text-neon-blue hover:underline disabled:text-white/30 disabled:no-underline transition-all"
+                >
+                  {isCountdownActive ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Inline Feedback Message */}
+          {otpMessage && (
+            <p className={`text-xs font-mono p-2.5 rounded border ${
+              otpStatus === 'success' 
+                ? 'text-green-400 bg-green-500/5 border-green-500/20' 
+                : 'text-red-400 bg-red-500/5 border-red-500/20'
+            }`}>
+              {otpMessage}
+            </p>
+          )}
+
           <div>
             <label className="block text-sm mb-1">PASSPHRASE</label>
             <input 
@@ -100,9 +257,10 @@ const Signup = () => {
               </div>
             </div>
           </div>
+
           <button 
             type="submit" 
-            disabled={isLoading || !isPasswordValid} 
+            disabled={isLoading || !isPasswordValid || !isEmailVerified} 
             className="cyber-btn mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
           >
             {isLoading ? 'Processing...' : 'Sign Up'}

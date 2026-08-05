@@ -14,7 +14,8 @@ class OTP(models.Model):
         ('LOGIN_2FA', 'Login 2FA'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otps')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='otps', null=True, blank=True)
+    email = models.EmailField(max_length=255, blank=True, null=True, db_index=True)
     code = models.CharField(max_length=6)
     purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES)
     is_used = models.BooleanField(default=False)
@@ -35,7 +36,9 @@ class OTP(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user', 'code', 'purpose']),
+            models.Index(fields=['email', 'code', 'purpose']),
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.purpose} - {self.code}"
+        identifier = self.user.username if self.user else self.email
+        return f"{identifier} - {self.purpose} - {self.code}"

@@ -61,11 +61,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (username, email, password) => {
+  const signup = async (username, email, password, code) => {
     try {
-      await api.post('/auth/signup/', { username, email, password });
-      toast.success('Identity registered. Check terminal for verification sequence.');
-      navigate('/verify-otp');
+      await api.post('/auth/signup/', { username, email, password, code });
+      toast.success('Registration successful. Please login.');
+      navigate('/login');
       return true;
     } catch (err) {
       const errorMsg = err.response?.data ? Object.values(err.response.data)[0] : 'Registration failed.';

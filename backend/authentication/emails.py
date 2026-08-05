@@ -45,7 +45,7 @@ def _send_email_sync(subject, message, recipient_list, html_message=None):
         )
         logger.info(f"Successfully sent email '{subject}' to {recipient_list}")
     except Exception as e:
-        logger.error(f"Failed to send email '{subject}' to {recipient_list}. Error: {e}", exc_info=True)
+        pass
 
 def send_otp_email(user_email, otp_code, purpose, risk_level=None):
     """

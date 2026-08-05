@@ -35,13 +35,98 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
+class RegisterSendOTPView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email', '').strip().lower()
+        if not email:
+            return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate email format
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response({"error": "Invalid email format."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Prevent duplicate email registrations
+        if User.objects.filter(email__iexact=email, is_verified=True).exists():
+            return Response({"error": "A user with this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Delete old OTPs for this email
+        OTP.objects.filter(email=email).delete()
+        
+        # Generate secure random 6-digit OTP
+        from datetime import timedelta
+        expires_at = timezone.now() + timedelta(minutes=5)
+        otp = OTP.objects.create(email=email, purpose='EMAIL_VERIFICATION', expires_at=expires_at)
+        
+        # Send OTP instantly via SMTP
+        from .emails import send_otp_email
+        try:
+            send_otp_email(email, otp.code, 'EMAIL_VERIFICATION')
+        except Exception as e:
+            return Response({"error": f"Failed to send email: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+        return Response({"message": "OTP has been sent successfully. Please check your Inbox or Spam folder."}, status=status.HTTP_200_OK)
+
+
+class RegisterVerifyOTPView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        email = request.data.get('email', '').strip().lower()
+        code = request.data.get('code', '').strip()
+        
+        if not email or not code:
+            return Response({"error": "Email and code are required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Get the latest OTP for this email
+        otp = OTP.objects.filter(email=email, purpose='EMAIL_VERIFICATION').order_by('-created_at').first()
+        
+        if not otp:
+            return Response({"error": "Invalid OTP. Please try again."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if otp.is_used:
+            return Response({"error": "This OTP has already been used."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if timezone.now() > otp.expires_at:
+            return Response({"error": "OTP has expired. Please request a new one."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if otp.code != code:
+            return Response({"error": "Invalid OTP. Please try again."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Mark as used (successfully verified)
+        otp.is_used = True
+        otp.save()
+        
+        return Response({"message": "Email Verified Successfully."}, status=status.HTTP_200_OK)
+
+
 class SignupView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = SignupSerializer
 
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email', '').strip().lower()
+        # Ensure the email was verified recently (within 10 minutes)
+        otp = OTP.objects.filter(email=email, purpose='EMAIL_VERIFICATION', is_used=True).order_by('-created_at').first()
+        if not otp or (timezone.now() - otp.created_at).total_seconds() > 600:
+            return Response({"error": "Email verification is required before sign up."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == status.HTTP_201_CREATED:
+            # Delete all OTP records for this email to satisfy "do not store OTPs permanently"
+            OTP.objects.filter(email=email).delete()
+        return response
+
     def perform_create(self, serializer):
         user = serializer.save()
+        user.is_verified = True # Immediately mark user as verified
         request = self.request
         ip = get_client_ip(request)
         user.ip_address = ip
@@ -59,11 +144,7 @@ class SignupView(generics.CreateAPIView):
         user.browser = user_agent.browser.family
         user.os = user_agent.os.family
         user.device = user_agent.device.family
-        
         user.save()
-        otp = OTP.objects.create(user=user, purpose='EMAIL_VERIFICATION')
-        from .emails import send_otp_email
-        send_otp_email(user.email, otp.code, 'EMAIL_VERIFICATION')
 
 
 class VerifyEmailView(APIView):
