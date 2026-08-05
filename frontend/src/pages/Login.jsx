@@ -37,7 +37,7 @@ const Login = () => {
             />
           </div>
           <div>
-            <label className="block text-sm mb-1">PASSPHRASE</label>
+            <label className="block text-sm mb-1">PASSWORD</label>
             <input 
               type="password" 
               required 

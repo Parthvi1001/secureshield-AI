@@ -42,11 +42,11 @@ const ForgotPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!isPasswordValid) {
-      toast.error("New passphrase does not meet complexity requirements.");
+      toast.error("New password does not meet complexity requirements.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passphrases do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
     setIsLoading(true);
@@ -77,7 +77,7 @@ const ForgotPassword = () => {
         </div>
 
         <h2 className="text-2xl font-bold font-orbitron neon-text text-center mb-2 uppercase tracking-widest">
-          Passphrase Reset
+          Password Reset
         </h2>
         <p className="text-xs text-white/50 text-center mb-6 font-mono">
           {step === 1 
@@ -123,7 +123,7 @@ const ForgotPassword = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1.5 uppercase tracking-wider">NEW PASSPHRASE</label>
+              <label className="block text-xs font-mono mb-1.5 uppercase tracking-wider">NEW PASSWORD</label>
               <input 
                 type="password" 
                 required 
@@ -160,7 +160,7 @@ const ForgotPassword = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1.5 uppercase tracking-wider">CONFIRM NEW PASSPHRASE</label>
+              <label className="block text-xs font-mono mb-1.5 uppercase tracking-wider">CONFIRM NEW PASSWORD</label>
               <input 
                 type="password" 
                 required 
@@ -176,7 +176,7 @@ const ForgotPassword = () => {
               disabled={isLoading || !isPasswordValid} 
               className="cyber-btn mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'OVERRIDING CREDENTIALS...' : 'RESET PASSPHRASE'}
+              {isLoading ? 'OVERRIDING CREDENTIALS...' : 'RESET PASSWORD'}
             </button>
           </form>
         )}

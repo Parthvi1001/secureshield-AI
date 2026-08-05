@@ -257,7 +257,7 @@ const Signup = () => {
           )}
 
           <div>
-            <label className="block text-sm mb-1">PASSPHRASE</label>
+            <label className="block text-sm mb-1">PASSWORD</label>
             <input 
               type="password" 
               required 
@@ -269,7 +269,7 @@ const Signup = () => {
             
             {/* Real-time Validation Checklist */}
             <div className="mt-3 p-3 bg-cyber-dark/50 border border-neon-blue/10 rounded-lg space-y-1.5 font-mono text-xs">
-              <span className="text-[10px] text-neon-blue/60 uppercase block mb-1 tracking-wider">Passphrase Requirements:</span>
+              <span className="text-[10px] text-neon-blue/60 uppercase block mb-1 tracking-wider">Password Requirements:</span>
               <div className="flex items-center space-x-2">
                 <span>{criteria.length ? '✅' : '❌'}</span>
                 <span className={criteria.length ? 'text-green-400' : 'text-white/60'}>Minimum 8 characters</span>

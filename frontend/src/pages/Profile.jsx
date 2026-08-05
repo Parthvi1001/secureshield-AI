@@ -312,7 +312,7 @@ const Profile = () => {
               
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div>
-                  <label className="block text-xs uppercase text-white/60 mb-1">Current Passphrase</label>
+                  <label className="block text-xs uppercase text-white/60 mb-1">Current Password</label>
                   <input
                     type="password"
                     required
@@ -325,7 +325,7 @@ const Profile = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs uppercase text-white/60 mb-1">New Secure Passphrase</label>
+                    <label className="block text-xs uppercase text-white/60 mb-1">New Secure Password</label>
                     <input
                       type="password"
                       required
@@ -336,7 +336,7 @@ const Profile = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs uppercase text-white/60 mb-1">Confirm New Passphrase</label>
+                    <label className="block text-xs uppercase text-white/60 mb-1">Confirm New Password</label>
                     <input
                       type="password"
                       required
@@ -353,7 +353,7 @@ const Profile = () => {
                   disabled={isChangingPassword}
                   className="cyber-btn w-auto px-6 border-neon-purple text-neon-purple hover:bg-neon-purple hover:text-black"
                 >
-                  {isChangingPassword ? 'Modifying Authorization Matrix...' : 'Override Authorization Passphrase'}
+                  {isChangingPassword ? 'Modifying Authorization Matrix...' : 'Override Authorization Password'}
                 </button>
               </form>
             </div>

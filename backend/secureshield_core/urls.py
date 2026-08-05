@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/scanner/', include('scanner.urls')),
     path('api/news/', include('news.urls')),
     path('api/history/', include('history.urls')),
+    path('api/alerts/', include('alerts.urls')),
     path('api/users/', include('users.urls')),
     path('api/admin/', include('adminpanel.urls')),
 ]
